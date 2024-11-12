@@ -213,12 +213,14 @@ static func inherit_from(child : String, parent: String, check_cached_result : b
 		var all_custom_class := ProjectSettings.get_global_class_list()
 		var current_class : Dictionary
 		var target_class
-		if _is_native_class(parent):
+		if _gdscript_string_to_type.has(parent) and _is_native_class(_gdscript_string_to_type[parent]):
 			target_class = _gdscript_string_to_type[parent]
 		
 		for custom_class in all_custom_class:
 			# If both child and parent class is found, then stop iterating
-			if current_class.size() > 0 and target_class != null and target_class.size() > 0:
+			if current_class.size() > 0 and target_class is Dictionary and target_class.size() > 0:
+				break
+			elif current_class.size() > 0 and target_class is not Dictionary and _gdscript_type_to_string.has(target_class):
 				break
 			
 			if custom_class.class == child:
@@ -231,7 +233,7 @@ static func inherit_from(child : String, parent: String, check_cached_result : b
 			var current_script = ResourceLoader.load(current_class.path)
 			
 			# Check if the target class is not native and is valid
-			if not _is_native_class(parent) and target_class != null:
+			if not _is_native_class(parent) and target_class != null and target_class is Dictionary:
 				
 				# Load the target class to be compared
 				var target_script = ResourceLoader.load(target_class.path)
@@ -256,8 +258,8 @@ static func inherit_from(child : String, parent: String, check_cached_result : b
 	
 	return false
 
-static func _is_native_class(name : String) -> bool:
-	return _gdscript_type_to_string.has(name)
+static func _is_native_class(type) -> bool:
+	return _gdscript_type_to_string.has(type)
 
 static func _get_native_class(name : String):
 	# Set the script code to return the current class
