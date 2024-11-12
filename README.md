@@ -2,13 +2,13 @@
  A Script to get class type (Also works for custom class and cross-scripting). Can be used for pattern matching. 
 Your script must have `class_name` (Or `[GlobalClass]` if C#) for this to work as intended
 
-You really only need the `Type.gd`, the other files are only for demonstration.
+### **You really only need the `Type.gd`, the other files are only for demonstration.**
 
 ## Usage demonstration:
 #### `extending_from(obj:Variant, readable_names:bool=false)`
 The passed object must be of type `Variant.Type` `TYPE_OBJECT`. The parameter actual type is not specified because `GDScriptNativeClass` is not accessible from normal code 
 
-Returns all of the script this object extending from. If `readable_names` is true, returns all of the type in String
+Returns all of the script this object extending from. If `readable_names` is true, returns all of the type in `String`
 
 Example with simple Node2D:
 ```gdscript
