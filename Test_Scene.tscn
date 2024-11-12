@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://brxfxtpadpdg4"]
+
+[ext_resource type="Script" path="res://TestTypeMatcher.gd" id="1_hc4ef"]
+[ext_resource type="Script" path="res://TestChildCSharp.cs" id="2_33lgk"]
+
+[node name="TestTypeMatcher" type="Node2D"]
+script = ExtResource("1_hc4ef")
+
+[node name="TestChildCSharp" type="Node2D" parent="."]
+script = ExtResource("2_33lgk")
