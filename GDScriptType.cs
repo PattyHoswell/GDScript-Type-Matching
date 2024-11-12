@@ -14,12 +14,12 @@ public static class GDScriptType
         }
     }
 
-    public static Array IsExtendingFrom(GodotObject obj, bool readable_names = false)
+    public static Array ExtendingFrom(GodotObject obj, bool readable_names = false)
     {
         return Internal_Script.Call("extending_from", obj, readable_names).AsGodotArray();
     }
 
-    public static bool IsInheritFrom(string child, string parent, bool check_cached_result = true)
+    public static bool InheritFrom(string child, string parent, bool check_cached_result = true)
     {
         return Internal_Script.Call("inherit_from", child, parent, check_cached_result).AsBool();
     }
