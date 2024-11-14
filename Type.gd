@@ -8,17 +8,16 @@ static var _gdscript_native_class := GDScript.new()
 static var _gdscript_type_to_string : Dictionary
 static var _gdscript_string_to_type : Dictionary
 static var _cached_inherit_result : Dictionary
-static var _excluded : Array = ["GDScriptNativeClass"]
+static var _excluded : Array[StringName] = [&"GDScriptNativeClass"]
 
 static func _static_init() -> void:
 	for native_class in ClassDB.get_class_list():
-		
 		# Exclude class that are on the class list but can't actually be accessed from the script
 		# And if they don't have any method at all
 		if not ClassDB.can_instantiate(native_class) and ClassDB.class_get_method_list(native_class, true).size() == 0:
 			continue
 		
-		# Native class cannot be instantiated but they do have a method
+		# Exclude native class that cannot be instantiated but they do have a method
 		# If there's new class in the future that cannot be accessed normally but have a method
 		# Feel free to add them to the exclusion yourself
 		if _excluded.has(native_class):
@@ -32,10 +31,10 @@ static func _static_init() -> void:
 ## The passed object must be of type [enum Variant.Type] TYPE_OBJECT.
 ## The parameter actual type is not specified because GDScriptNativeClass is not accessible from normal code
 ## [br][br]
-## Returns all of the script this object extending from. 
-## If [param readable_names] is true, returns all of the type in [String]
+## Returns an array of all of the script this object extending from. 
+## If [param readable_names] is true, returns all of the type in [StringName]
 ## [br][br]
-## Example with simple Node2D:
+## Example with simple [Node2D]:
 ## [codeblock]
 ##class_name TestTypeMatcher extends Node2D
 ##
@@ -51,7 +50,7 @@ static func _static_init() -> void:
 ## [/codeblock]
 ## Example with custom class that inherit custom class:
 ## [codeblock]
-## # TestParent inherit Node2D
+### TestParent inherit Node2D
 ##class_name TestTypeMatcher extends TestParent
 ##
 ##func _ready() -> void:
@@ -94,6 +93,7 @@ static func _static_init() -> void:
 ## [br][br]
 ## [color=yellow][b]Note:[/b][/color] This is more strict and you have less control over what you can match on the array:
 ## [codeblock]
+### TestParent inherit Node2D
 ##class_name TestTypeMatcher extends TestParent
 ## 
 ##func _ready() -> void:
@@ -102,8 +102,7 @@ static func _static_init() -> void:
 ##            # Will not print this because the size doesn't match
 ##            print("I inherited TestParent (fixed size)")
 ##        [Node2D, ..]:
-##            # Will not print this because the size doesn't match
-##            # And because Node2D is not the first item on the array
+##            # Will not print this because Node2D is not the first item on the array
 ##            print("I inherited Node2D")
 ##        [TestParent, ..]:
 ##            # Will print this because of the ..
@@ -133,6 +132,7 @@ static func _static_init() -> void:
 ##        # Underscore means default
 ##        # This is indistinguishable to an if check
 ##        _ when extending_types.has(Node):
+##            # Will not print this because the first is already a match
 ##            print("I inherited Node")
 ## [/codeblock]
 static func extending_from(obj, readable_names: bool = false) -> Array:
@@ -155,10 +155,8 @@ static func extending_from(obj, readable_names: bool = false) -> Array:
 		current_script = current_script.get_base_script()
 		# Check if the next class is not null, if its not then add to the result
 		if current_script != null:
-			if readable_names:
-				result.append(current_script.get_global_name())
-			else:
-				result.append(current_script)
+			var to_add = current_script if not readable_names else current_script.get_global_name()
+			result.append(to_add)
 	
 	# Get the base engine class
 	var current_class
@@ -196,31 +194,42 @@ static func extending_from(obj, readable_names: bool = false) -> Array:
 ##class_name TestTypeMatcher extends Node2D
 ##
 ##func _ready() -> void:
-##    print(Type.inherit_from("Area2D", "Node2D"))                    # returns true
-##    print(Type.inherit_from("Area2D", "Node3D"))                    # returns false
-##    print(Type.inherit_from("TestTypeMatcher", "Node"))             # returns true
-##    print(Type.inherit_from("TestChildCSharp", "TestParentCSharp")) # returns true
-##    print(Type.inherit_from("TestTypeMatcher", "TestParentCSharp")) # returns false
+##    print(Type.inherit_from("Area2D", "Node2D"))                    # prints true
+##    print(Type.inherit_from("Area2D", "Node3D"))                    # prints false
+##    print(Type.inherit_from("TestTypeMatcher", "Node"))             # prints true
+##    print(Type.inherit_from("TestChildCSharp", "TestParentCSharp")) # prints true
+##    print(Type.inherit_from("TestTypeMatcher", "TestParentCSharp")) # prints false
 ## [/codeblock]
-static func inherit_from(child : String, parent: String, check_cached_result : bool = false) -> bool:
-	if ClassDB.class_exists(child) and ClassDB.class_exists(parent):
+static func inherit_from(child : String, parent : String, check_cached_result : bool = true) -> bool:
+	var is_child_native := ClassDB.class_exists(child)
+	var is_parent_native := ClassDB.class_exists(parent)
+	
+	if is_child_native and is_parent_native:
 		return ClassDB.is_parent_class(child, parent)
 	else:
 		# Check for cached result so we don't have to do the same process all over again
 		if check_cached_result and _cached_inherit_result.has(child) and _cached_inherit_result[child] == parent:
 			return true
-			
+		
+		# Get all of the global class on this project
+		# If your class is not available here then check if it has assigned class_name (or [GlobalClass] if C#)
 		var all_custom_class := ProjectSettings.get_global_class_list()
 		var current_class : Dictionary
+		var is_target_native : bool
+		
+		# Doesn't explicitly specify the target_class type because it can be Dictionary or Script or GDScriptNativeClass
 		var target_class
+		
+		# We don't add it to cache in case the user check for type that exist but can't be instantiated
 		if _gdscript_string_to_type.has(parent) and _is_native_class(_gdscript_string_to_type[parent]):
 			target_class = _gdscript_string_to_type[parent]
+			is_target_native = true
 		
 		for custom_class in all_custom_class:
 			# If both child and parent class is found, then stop iterating
-			if current_class.size() > 0 and target_class is Dictionary and target_class.size() > 0:
+			if current_class.size() > 0 and not is_target_native and target_class is Dictionary:
 				break
-			elif current_class.size() > 0 and target_class is not Dictionary and _gdscript_type_to_string.has(target_class):
+			elif current_class.size() > 0 and is_target_native:
 				break
 			
 			if custom_class.class == child:
@@ -228,12 +237,15 @@ static func inherit_from(child : String, parent: String, check_cached_result : b
 			elif target_class == null and custom_class.class == parent:
 				target_class = custom_class
 		
+		if not is_child_native and current_class.size() == 0:
+			push_warning("Type.inherit_from cannot find engine class named %s (Child)" % child)
+		
 		# Check if the child class is valid and can be loaded
 		if current_class.size() > 0 and not current_class.class.is_empty() and ResourceLoader.exists(current_class.path):
 			var current_script = ResourceLoader.load(current_class.path)
 			
 			# Check if the target class is not native and is valid
-			if not _is_native_class(parent) and target_class != null and target_class is Dictionary:
+			if not is_target_native and target_class is Dictionary:
 				
 				# Load the target class to be compared
 				var target_script = ResourceLoader.load(target_class.path)
@@ -243,8 +255,13 @@ static func inherit_from(child : String, parent: String, check_cached_result : b
 						_cached_inherit_result[child] = parent
 						return true
 					current_script = current_script.get_base_script()
+				
+				# If it doesn't found the script and is not an engine class, then check if it exist on the global class list
+				if all_custom_class.all(func(custom_class): return custom_class.class != parent):
+					# Warn the user if they passed a parent name that's not found anywhere
+					push_warning("Type.inherit_from cannot find class named %s (Parent)" % parent)
 			
-			elif ClassDB.class_exists(parent):
+			elif is_parent_native:
 				var current_checking_class = current_script.get_instance_base_type()
 				while not current_checking_class.is_empty():
 					if current_checking_class == parent:
@@ -255,16 +272,36 @@ static func inherit_from(child : String, parent: String, check_cached_result : b
 						_gdscript_string_to_type[current_checking_class] = _get_native_class(current_checking_class)
 					# Get the class this class derive from
 					current_checking_class = ClassDB.get_parent_class(current_checking_class)
+			else:
+				# In case every check passed except this last check, warns the user the that the passed parameter is invalid
+				push_warning("Type.inherit_from cannot find class named %s (Parent)" % parent)
+			
+		elif is_child_native and not is_parent_native:
+			push_warning("Type.inherit_from is called with engine class on child parameter (%s), but not on the parent parameter (%s)" % [child, parent])
 	
 	return false
 
 static func _is_native_class(type) -> bool:
 	return _gdscript_type_to_string.has(type)
 
-static func _get_native_class(name : String):
+static func _get_native_class(name : String, check_exist: bool = false) -> Object:
+	# This is for C# cross scripting to check if it exist and if it has been cached or not
+	if check_exist:
+		if not ClassDB.class_exists(name):
+			return null
+		elif _gdscript_string_to_type.has(name):
+			return _gdscript_string_to_type[name]
+	
 	# Set the script code to return the current class
 	# This is a hack to get GDScriptNativeClass which isn't normally obtainable
 	_gdscript_native_class.set_source_code("static func get_gdscript_native_class(): return %s" % name)
 	_gdscript_native_class.reload()
 	
-	return _gdscript_native_class.get_gdscript_native_class()
+	var type = _gdscript_native_class.get_gdscript_native_class()
+	
+	if check_exist:
+		# This is for C# cross scripting in case it gets a type that has not been cached
+		_gdscript_string_to_type[name] = type
+		_gdscript_type_to_string[type] = name
+	
+	return type
