@@ -57,6 +57,14 @@ func _ready() -> void:
 		# Will print this
 		print("TestTypeMatcher inherited Node2D")
 ```
+Example with checking if type is in array:
+```gdscript
+class_name TestTypeMatcher extends Node2D
+
+func _ready() -> void:
+	if Node2D in Type.extending_from(self):
+		print("TypeTypeMatcher inherited Node2D")
+```
 Example that gets a readable class name:
 ```gdscript
 class_name TestTypeMatcher extends Node2D
