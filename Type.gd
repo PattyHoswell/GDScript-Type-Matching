@@ -84,6 +84,7 @@ static func _static_init() -> void:
 ## Example with checking if type is in [Array]:
 ## [codeblock]
 ##class_name TestTypeMatcher extends Node2D
+##
 ##func _ready() -> void:
 ##    if Node2D in Type.extending_from(self):
 ##        print("TypeTypeMatcher inherited Node2D")
