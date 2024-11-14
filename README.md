@@ -163,7 +163,7 @@ GD.Print(GDScriptType.InheritFrom("TestParentCSharp", "TestTypeMatcher")); // pr
 
 ## Usage demonstration `GetNativeScript<T>`:
 #### `GodotObject GetNativeScript<T>(bool check_exist = true) where T : GodotObject`
-Use this to compare the result given by `ExtendingFrom"`. Note that this is only for getting the engine script `GDScriptNativeClass`
+Use this to compare the result given by `ExtendingFrom`. Note that this is only for getting the engine script `GDScriptNativeClass`
 For getting your script `GDScript` use `GetGDScript`
 
 The reason they are separated is because `GDScriptNativeClass` doesn't actually extend from `GDScript`
@@ -177,7 +177,7 @@ if (GDScriptType.ExtendingFrom(this).Contains(script))
 
 ## Usage demonstration `GetGDScript`:
 #### `GDScript GetGDScript(string name, bool check_exist = true)`
-Use this to compare the result given by `ExtendingFrom"`. Note that this is only for getting `GDScript`
+Use this to compare the result given by `ExtendingFrom`. Note that this is only for getting `GDScript`
 For getting engine script use `GetNativeScript<T>`
 ```c#
 var script = GDScriptType.GetGDScript("TestParent");
@@ -189,7 +189,7 @@ if (GDScriptType.ExtendingFrom(this).Contains(script))
 
 ## Usage demonstration `GetCSharpScript<T>`:
 #### `CSharpScript GetCSharpScript<T>(bool check_exist = true) where T : class`
-Use this to compare the result given by `ExtendingFrom"`. Note that this is only for getting `CSharpScript`
+Use this to compare the result given by `ExtendingFrom`. Note that this is only for getting `CSharpScript`
 For getting engine script use `GetNativeScript<T>` or `GetGDScript`
 ```c#
 var script = GDScriptType.GetCSharpScript<TestParentCSharp>();
