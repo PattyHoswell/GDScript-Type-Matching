@@ -5,12 +5,12 @@ Your script must have `class_name` (Or `[GlobalClass]` if C#) for this to work a
 ### **You really only need the `Type.gd`, the other files are only for demonstration.**
 
 ## Usage demonstration:
-#### `extending_from(obj:Variant, readable_names:bool=false)`
-The passed object must be of type `Variant.Type` `TYPE_OBJECT`. The parameter actual type is not specified because `GDScriptNativeClass` is not accessible from normal code 
+#### `extending_from(obj:Variant, readable_names:bool=false) -> Array`
+The passed object must be of type `Variant.Type.TYPE_OBJECT`. The parameter actual type is not specified because `GDScriptNativeClass` is not accessible from normal code 
 
-Returns all of the script this object extending from. If `readable_names` is true, returns all of the type in `String`
+Returns an `Array` of all of the script this object extending from. If `readable_names` is true, returns all of the type in `StringName`
 
-Example with simple Node2D:
+Example with simple `Node2D`:
 ```gdscript
 class_name TestTypeMatcher extends Node2D
 
@@ -77,8 +77,7 @@ func _ready() -> void:
 			# Will not print this because the size doesn't match
 			print("I inherited TestParent (fixed size)")
 		[Node2D, ..]:
-			# Will not print this because the size doesn't match
-			# And because Node2D is not the first item on the array
+			# Will not print this because Node2D is not the first item on the array
 			print("I inherited Node2D")
 		[TestParent, ..]:
 			# Will print this because of the ..
@@ -108,10 +107,11 @@ func _ready() -> void:
 		# Underscore means default
 		# This is indistinguishable to an if check
 		_ when extending_types.has(Node):
-				print("I inherited Node")
+			# Will not print this because the first is already a match
+			print("I inherited Node")
 ```
 ## Usage demonstration:
-#### `inherit_from(child:String, parent:String, check_cached_result:bool=false)`
+#### `inherit_from(child:String, parent:String, check_cached_result:bool=true) -> bool`
 Returns whether child inherit from parent or not. This is almost the same as `ClassDB.is_parent_class()` except this also works for custom class and cross-scripting 
 
 Use this is you don't have direct access to the class but has access to the class name 
