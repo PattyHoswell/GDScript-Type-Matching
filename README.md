@@ -4,7 +4,7 @@ Your script must have `class_name` (Or `[GlobalClass]` if C#) for this to work a
 
 ### **You really only need the `Type.gd`, the other files are only for demonstration.**
 
-## Usage demonstration:
+## Usage demonstration `extending_from`:
 #### `extending_from(obj:Variant, readable_names:bool=false) -> Array`
 The passed object must be of type `Variant.Type.TYPE_OBJECT`. The parameter actual type is not specified because `GDScriptNativeClass` is not accessible from normal code 
 
@@ -110,7 +110,8 @@ func _ready() -> void:
 			# Will not print this because the first is already a match
 			print("I inherited Node")
 ```
-## Usage demonstration:
+
+## Usage demonstration `inherit_from`:
 #### `inherit_from(child:String, parent:String, check_cached_result:bool=true) -> bool`
 Returns whether child inherit from parent or not. This is almost the same as `ClassDB.is_parent_class()` except this also works for custom class and cross-scripting 
 
@@ -127,4 +128,73 @@ func _ready() -> void:
 	print(Type.inherit_from("TestTypeMatcher", "Node"))             # returns true
 	print(Type.inherit_from("TestChildCSharp", "TestParentCSharp")) # returns true
 	print(Type.inherit_from("TestTypeMatcher", "TestParentCSharp")) # returns false
+```
+
+# C#
+All of the method shown here are on a static class named `GDScriptType`
+## Usage demonstration `ExtendingFrom`:
+#### `Array<GodotObject> ExtendingFrom(GodotObject obj)`
+Get all of the script `obj` extending from. return an `Array` wrapper of type `GodotObject`
+```c#
+Array<GodotObject> extendingScript = GDScriptType.ExtendingFrom(this);
+```
+
+## Usage demonstration `ExtendingNamesFrom`:
+#### `Array<StringName> ExtendingNamesFrom(GodotObject obj)`
+Get all of the script `obj` extending from. return an `Array` wrapper of type `StringName`
+```c#
+Array<StringName> extendingScript = GDScriptType.ExtendingNamesFrom(this);
+```
+
+## Usage demonstration `InheritFrom`:
+#### `bool InheritFrom(string child, string parent, bool check_cached_result = true)`
+This is almost the same as `ClassDB.IsParentClass` except this also works for custom class and cross-scripting.
+
+Use this is if you don't have direct access to the class but has access to the class name
+
+Set `check_cached_result` to false if the cached result is wrong somehow
+```c#
+GD.Print(GDScriptType.InheritFrom("Area2D", "Node2D"));                    // prints true
+GD.Print(GDScriptType.InheritFrom("Area2D", "Node3D"));                    // prints false
+GD.Print(GDScriptType.InheritFrom("TestChildCSharp", "Node"));             // prints true
+GD.Print(GDScriptType.InheritFrom("TestTypeMatcher", "TestParent"));       // prints true
+GD.Print(GDScriptType.InheritFrom("TestParentCSharp", "TestTypeMatcher")); // prints false
+```
+
+## Usage demonstration `GetNativeScript<T>`:
+#### `GodotObject GetNativeScript<T>(bool check_exist = true) where T : GodotObject`
+Use this to compare the result given by `ExtendingFrom"`. Note that this is only for getting the engine script `GDScriptNativeClass`
+For getting your script `GDScript` use `GetGDScript`
+
+The reason they are separated is because `GDScriptNativeClass` doesn't actually extend from `GDScript`
+```c#
+var script = GDScriptType.GetNativeScript<Node>();
+if (GDScriptType.ExtendingFrom(this).Contains(script))
+{
+	GD.Print("Success");
+}
+```
+
+## Usage demonstration `GetGDScript`:
+#### `GDScript GetGDScript(string name, bool check_exist = true)`
+Use this to compare the result given by `ExtendingFrom"`. Note that this is only for getting `GDScript`
+For getting engine script use `GetNativeScript<T>`
+```c#
+var script = GDScriptType.GetGDScript("TestParent");
+if (GDScriptType.ExtendingFrom(this).Contains(script))
+{
+	GD.Print("Success");
+}
+```
+
+## Usage demonstration `GetCSharpScript<T>`:
+#### `CSharpScript GetCSharpScript<T>(bool check_exist = true) where T : class`
+Use this to compare the result given by `ExtendingFrom"`. Note that this is only for getting `CSharpScript`
+For getting engine script use `GetNativeScript<T>` or `GetGDScript`
+```c#
+var script = GDScriptType.GetCSharpScript<TestParentCSharp>();
+if (GDScriptType.ExtendingFrom(this).Contains(script))
+{
+	GD.Print("Success");
+}
 ```
