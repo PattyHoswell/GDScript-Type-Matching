@@ -42,6 +42,10 @@ func _array_if_check() -> void:
 		# Will print this
 		print("TestTypeMatcher inherited Node2D")
 
+func _array_if_in_check():
+	if Node2D in Type.extending_from(self):
+		print("TestTypeMatcher inherited Node2D")
+
 func _array_if_check_name() -> void:
 	if Type.extending_from(TestTypeMatcher, true).has("Node2D"):
 		print("TestTypeMatcher inherited Node2D")
