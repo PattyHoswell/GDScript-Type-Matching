@@ -4,7 +4,7 @@ Your script must have `class_name` (Or `[GlobalClass]` if C#) for this to work a
 
 ### **You really only need the `Type.gd`, the other files are only for demonstration.**
 
-## Usage demonstration `as_type_name':
+## Usage demonstration `as_type_name`:
 #### `as_type_name(type:Variant) -> StringName`
 Get the type name of the passed type
 
