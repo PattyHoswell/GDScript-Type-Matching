@@ -4,6 +4,39 @@ Your script must have `class_name` (Or `[GlobalClass]` if C#) for this to work a
 
 ### **You really only need the `Type.gd`, the other files are only for demonstration.**
 
+## Usage demonstration `as_type_name':
+#### `as_type_name(type:Variant) -> StringName`
+Get the type name of the passed type
+
+This is almost similar to [(Microsoft Documentation) Type.Name C#](https://learn.microsoft.com/en-us/dotnet/api/system.type.gettype) and passing `typeof` result into `type_string`. But in `type_string` case if the passed obj is an instance then it will always return `Object`. It also doesn't know if `Array` or (If you're using v4.4 and above) `Dictionary` is typed or not
+
+Example usage:
+```gdscript
+class_name TestTypeMatcher extends TestParent
+
+func _ready() -> void:
+	print(Type.as_type_name(null))                           # print Nil
+	print(Type.as_type_name(Node))                           # print Node
+	print(Type.as_type_name(Node2D.new()))                   # print Node2D
+	print(Type.as_type_name(TestParent))                     # print TestParent
+	print(Type.as_type_name(TestTypeMatcher.new()))          # print TestTypeMatcher
+	print(Type.as_type_name(TestParentCSharp))               # print TestParentCSharp
+	print(Type.as_type_name(0))                              # print int
+	print(Type.as_type_name(0.0))                            # print float
+	print(Type.as_type_name([]))                             # print Array
+	print(Type.as_type_name(Array()), " (constructor)")      # print Array (constructor)
+	var typed_array_engine_class : Array[Vector2]
+	print(Type.as_type_name(typed_array_engine_class))       # print Array[Vector2]
+	var typed_array_custom_class : Array[TestTypeMatcher]
+	print(Type.as_type_name(typed_array_custom_class))       # print Array[TestTypeMatcher]
+	print(Type.as_type_name({}))                             # print Dictionary
+	print(Type.as_type_name(Dictionary()), " (constructor)") # print Dictionary (constructor)
+
+	# Only on 4.4 and above which supports typed dictionary
+	var typed_dictionary : Dictionary[Vector2, Node]
+	print(Type.as_type_name(typed_dictionary))               # print Dictionary[Vector2, Node]
+```
+
 ## Usage demonstration `extending_from`:
 #### `extending_from(obj:Variant, readable_names:bool=false) -> Array`
 The passed object must be of type `Variant.Type.TYPE_OBJECT`. The parameter actual type is not specified because `GDScriptNativeClass` is not accessible from normal code 
