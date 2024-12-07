@@ -83,6 +83,36 @@ public static class GDScriptType
     }
 
     /// <summary>
+    /// Get the type name of the passed <paramref name="obj"/>
+    /// <para/>
+    /// This is intended for getting a type name of GDScript obj that you can't normally access from C#
+    /// <para/>
+    /// Usage demonstration:
+    /// <code>
+    /// switch (GDScriptType.AsTypeName(this))
+    /// {
+    ///     case "TestTypeMatcher":
+    ///         // do something
+    ///         break;
+    ///     case "TestParent":
+    ///         // do something
+    ///         break;
+    ///     case "PackedStringArray":
+    ///         // do something
+    ///         break;
+    /// }
+    /// </code>
+    /// </summary>
+    /// <param name="obj">The obj you want to get the type name of</param>
+    /// <returns>The type name in <see cref="string"/>, if the passed <paramref name="obj"/> is a built-in type.
+    /// Then return the name according to <see href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#built-in-types">Built-in Types Documentation</see></returns>
+    public static string AsTypeName(Variant obj)
+    {
+        var result = Internal_Script.Call(MethodName.AsTypeName, obj).AsString();
+        result = result.Replace('[', '<').Replace(']', '>');
+        return result;
+    }
+    /// <summary>
     /// Get all of the script <paramref name="obj"/> extending from.
     /// <para/>
     /// Usage demonstration:
@@ -251,6 +281,10 @@ public static class GDScriptType
     /// </summary>
     public class MethodName
     {
+        /// <summary>
+        /// Cached name for the 'as_type_name' method.
+        /// </summary>
+        public static readonly StringName AsTypeName = "as_type_name";
         /// <summary>
         /// Cached name for the 'extending_from' method.
         /// </summary>

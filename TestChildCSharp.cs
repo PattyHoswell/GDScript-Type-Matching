@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 
 [GlobalClass]
 public partial class TestChildCSharp : TestParentCSharp
@@ -68,5 +69,22 @@ public partial class TestChildCSharp : TestParentCSharp
         GD.Print(GDScriptType.InheritFrom("TestChildCSharp", "Node"), " (C# Check)");             // prints true
         GD.Print(GDScriptType.InheritFrom("TestTypeMatcher", "TestParent"), " (C# Check)");       // prints true
         GD.Print(GDScriptType.InheritFrom("TestParentCSharp", "TestTypeMatcher"), " (C# Check)"); // prints false
+    }
+
+    void CheckTypeName()
+    {
+        /* 
+         * Most of the test showcased in GDScript side can be done simply by using nameof or typeof
+         * So I'll only show the most obvious differences
+         */
+
+        GodotObject obj = null;
+        GD.Print(GDScriptType.AsTypeName(obj));                 // prints Nil
+        GD.Print(GDScriptType.AsTypeName(GetParent()));         // prints TestTypeMatcher
+        GD.Print(GDScriptType.AsTypeName(new string[0]));       // prints PackedStringArray
+        GD.Print(GDScriptType.AsTypeName(new Array<string>())); /* prints Array
+                                                                 * There's a weird conversion happening on godot here but basically
+                                                                 * Use the regular c# version when possible that can be automatically converted into the appropriate type
+                                                                 */
     }
 }

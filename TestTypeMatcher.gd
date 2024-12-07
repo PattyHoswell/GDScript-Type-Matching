@@ -83,8 +83,103 @@ func _array_pattern_match_v2() -> void:
 			print("I inherited Node")
 
 func _check_inheritance() -> void:
-	print(Type.inherit_from("Area2D", "Node2D"))                    # returns true
-	print(Type.inherit_from("Area2D", "Node3D"))                    # returns false
-	print(Type.inherit_from("TestTypeMatcher", "Node"))             # returns true
-	print(Type.inherit_from("TestChildCSharp", "TestParentCSharp")) # returns true
-	print(Type.inherit_from("TestTypeMatcher", "TestParentCSharp")) # returns false
+	print(Type.inherit_from("Area2D", "Node2D"))                    # print true
+	print(Type.inherit_from("Area2D", "Node3D"))                    # print false
+	print(Type.inherit_from("TestTypeMatcher", "Node"))             # print true
+	print(Type.inherit_from("TestChildCSharp", "TestParentCSharp")) # print true
+	print(Type.inherit_from("TestTypeMatcher", "TestParentCSharp")) # print false
+
+func _check_type_name() -> void:
+	print(Type.as_type_name(null))                           # print Nil
+	print(Type.as_type_name(Node))                           # print Node
+	print(Type.as_type_name(Node2D.new()))                   # print Node2D
+	print(Type.as_type_name(TestParent))                     # print TestParent
+	print(Type.as_type_name(TestTypeMatcher.new()))          # print TestTypeMatcher
+	print(Type.as_type_name(TestParentCSharp))               # print TestParentCSharp
+	print(Type.as_type_name(0))                              # print int
+	print(Type.as_type_name(0.0))                            # print float
+	print(Type.as_type_name([]))                             # print Array
+	print(Type.as_type_name(Array()), " (constructor)")      # print Array (constructor)
+	var typed_array_engine_class : Array[Vector2]
+	print(Type.as_type_name(typed_array_engine_class))       # print Array[Vector2]
+	var typed_array_custom_class : Array[TestTypeMatcher]
+	print(Type.as_type_name(typed_array_custom_class))       # print Array[TestTypeMatcher]
+	print(Type.as_type_name({}))                             # print Dictionary
+	print(Type.as_type_name(Dictionary()), " (constructor)") # print Dictionary (constructor)
+
+func _check_all_built_in_type_name() -> void:
+	print(Type.as_type_name(null))                           # print Nil
+	print(Type.as_type_name(false))                          # print bool
+	print(Type.as_type_name(bool()), " (constructor)")       # print bool (constructor)
+	print(Type.as_type_name(0))                              # print int
+	print(Type.as_type_name(int()), " (constructor)")        # print int (constructor)
+	print(Type.as_type_name(0.0))                            # print float
+	print(Type.as_type_name(float()), " (constructor)")      # print float (constructor)
+	print(Type.as_type_name(""))                             # print String
+	print(Type.as_type_name(String()), " (constructor)")     # print String (constructor)
+	print(Type.as_type_name(&""))                            # print StringName
+	print(Type.as_type_name(StringName()), " (constructor)") # print StringName (constructor)
+	print(Type.as_type_name(^""))                            # print NodePath
+	print(Type.as_type_name(NodePath()), " (constructor)")   # print NodePath (constructor)
+	print(Type.as_type_name(Vector2.ZERO))                   # print Vector2
+	print(Type.as_type_name(Vector2i.ZERO))                  # print Vector2i
+	print(Type.as_type_name(Rect2()))                        # print Rect2
+	print(Type.as_type_name(Rect2i()))                       # print Rect2i
+	print(Type.as_type_name(Vector3.ZERO))                   # print Vector3
+	print(Type.as_type_name(Vector3i.ZERO))                  # print Vector3i
+	print(Type.as_type_name(Vector4.ZERO))                   # print Vector4
+	print(Type.as_type_name(Vector4i.ZERO))                  # print Vector4i
+	print(Type.as_type_name(Transform2D.IDENTITY))           # print Transform2D
+	print(Type.as_type_name(Plane()))                        # print Plane
+	print(Type.as_type_name(Quaternion.IDENTITY))            # print Quaternion
+	print(Type.as_type_name(AABB()))                         # print AABB
+	print(Type.as_type_name(Basis.IDENTITY))                 # print Basis
+	print(Type.as_type_name(Transform3D.IDENTITY))           # print Transform3D
+	print(Type.as_type_name(Projection.ZERO))                # print Projection
+	print(Type.as_type_name(Color.BLACK))                    # print Color
+	print(Type.as_type_name(RID()))                          # print RID
+	print(Type.as_type_name(Object))                         # print Object
+	print(Type.as_type_name([]))                             # print Array
+	print(Type.as_type_name(Array()), " (constructor)")      # print Array (constructor)
+	var typed_array_engine_class : Array[Vector2]
+	print(Type.as_type_name(typed_array_engine_class))       # print Array[Vector2]
+	var typed_array_custom_class : Array[TestTypeMatcher]
+	print(Type.as_type_name(typed_array_custom_class))       # print Array[TestTypeMatcher]
+	print(Type.as_type_name(PackedByteArray()))              # print PackedByteArray
+	print(Type.as_type_name(PackedInt32Array()))             # print PackedInt32Array
+	print(Type.as_type_name(PackedInt64Array()))             # print PackedInt64Array
+	print(Type.as_type_name(PackedFloat32Array()))           # print PackedFloat32Array
+	print(Type.as_type_name(PackedFloat64Array()))           # print PackedFloat64Array
+	print(Type.as_type_name(PackedStringArray()))            # print PackedStringArray
+	print(Type.as_type_name(PackedVector2Array()))           # print PackedVector2Array
+	print(Type.as_type_name(PackedVector3Array()))           # print PackedVector3Array
+	print(Type.as_type_name(PackedVector4Array()))           # print PackedVector4Array
+	print(Type.as_type_name(PackedColorArray()))             # print PackedColorArray
+	print(Type.as_type_name({}))                             # print Dictionary
+	print(Type.as_type_name(Dictionary()), " (constructor)") # print Dictionary (constructor)
+	
+	# If the engine supports typed dictionary
+	var engine_ver : Dictionary = Engine.get_version_info()
+	if engine_ver.major >= 4 and engine_ver.minor >= 4:
+		# To avoid godot from screaming if the engine version doesn't actually support it
+		var typed_dict_print := GDScript.new()
+		typed_dict_print.source_code = "
+		static func print_typed_dict():
+			var typed_dict_v1 : Dictionary[Variant, Node]
+			print(Type.as_type_name(typed_dict_v1))
+			var typed_dict_v2 : Dictionary[Node3D, Variant]
+			print(Type.as_type_name(typed_dict_v2))
+			var typed_dict_v3 : Dictionary[TestParent, Node]
+			print(Type.as_type_name(typed_dict_v3))
+			var typed_dict_v4 : Dictionary[Vector2i, TestParentCSharp]
+			print(Type.as_type_name(typed_dict_v4))
+			"
+		typed_dict_print.reload()
+		# print Dictionary[Variant, Node]
+		# Dictionary[Node3D, Variant]
+		# Dictionary[TestParent, Node]
+		# Dictionary[Vector2i, TestParentCSharp]
+		typed_dict_print.print_typed_dict()
+	
+	print(Type.as_type_name(Signal()))                       # print Signal
+	print(Type.as_type_name(Callable()))                     # print Callable

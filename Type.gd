@@ -1,4 +1,5 @@
 ## Helper class to get class type (Also works for custom class and cross-scripting!). 
+##
 ## Can be used for pattern matching
 ## [br][br]
 ## Your script must have class_name (Or [GlobalClass] if C#) for this to work as intended
@@ -12,21 +13,245 @@ static var _excluded : Array[StringName] = [&"GDScriptNativeClass"]
 
 static func _static_init() -> void:
 	for native_class in ClassDB.get_class_list():
+		# Since ClassDB.get_class_list() returns PackedStringArray we convert it to StringName
+		# This is for Type.as_type_name() to be consistently returns StringName
+		var native_class_string_name = StringName(native_class)
+		
 		# Exclude class that are on the class list but can't actually be accessed from the script
 		# And if they don't have any method at all
-		if not ClassDB.can_instantiate(native_class) and ClassDB.class_get_method_list(native_class, true).size() == 0:
+		if not ClassDB.can_instantiate(native_class_string_name) and ClassDB.class_get_method_list(native_class_string_name, true).size() == 0:
 			continue
 		
 		# Exclude native class that cannot be instantiated but they do have a method
 		# If there's new class in the future that cannot be accessed normally but have a method
 		# Feel free to add them to the exclusion yourself
-		if _excluded.has(native_class):
+		if _excluded.has(native_class_string_name):
 			continue
 		
-		var type = _get_native_class(native_class)
-		_gdscript_string_to_type[native_class] = type
-		_gdscript_type_to_string[type] = native_class
+		var type = _get_native_class(native_class_string_name)
+		_gdscript_string_to_type[native_class_string_name] = type
+		_gdscript_type_to_string[type] = native_class_string_name
+
+## Get the type name of the passed type
+## [br][br]
+## This is almost similar to 
+## [url=https://learn.microsoft.com/en-us/dotnet/api/system.type.gettype](Microsoft Documentation) Type.Name C#[/url]
+## and passing [method @GlobalScope.typeof] result into [method @GlobalScope.type_string]. 
+## But in [method @GlobalScope.type_string] case if the passed obj is an instance then it will always return Object.
+## It also doesn't know if [Array] or (If you're using v4.4 and above) [Dictionary] is typed or not
+## [codeblock]
+## print(type_string(typeof(Node2D))) # print Object
+## print(Type.as_type_name(Node2D))   # print Node2D
+##
+## var typed_array : Array[Vector2]
+## print(type_string(typeof(typed_array)))  # print Array
+## print(Type.as_type_name(typed_array))    # print Array[Vector2]
+##
+## # Only on 4.4 and above which supports typed dictionary
+## var typed_dictionary : Dictionary[Vector2, Node]
+## print(type_string(typeof(typed_dictionary))) # print Dictionary
+## print(Type.as_type_name(typed_dictionary))   # print Dictionary[Vector2, Node]
+## [/codeblock]
+## [b]Note:[/b] Since you can't use some built in type directly, e.g.
+## [codeblock]
+## Type.as_type_name(Array)
+## [/codeblock]
+## Instead you have to do it like
+## [codeblock]
+## Type.as_type_name([])
+## # Or
+## Type.as_type_name(Array())
+## # Or
+## var array : Array
+## Type.as_type_name(array)
+## [/codeblock]
+## The order of the check:
+## [br]
+## -- Custom Script
+## [br]
+## -- Engine Script
+## [br]
+## -- An instance
+## [br]
+## ---- An instance with custom script
+## [br]
+## ---- An instance without custom script
+## [br]
+## -- Built-in types based off 
+## [url=https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#built-in-types]Built-in Types Documentation[/url]
+## [br][br]
+## 
+## Example usage:
+## [codeblock]
+##class_name TestTypeMatcher extends TestParent
+##
+##func _ready() -> void:
+##    print(Type.as_type_name(null))                           # print Nil
+##    print(Type.as_type_name(Node))                           # print Node
+##    print(Type.as_type_name(Node2D.new()))                   # print Node2D
+##    print(Type.as_type_name(TestParent))                     # print TestParent
+##    print(Type.as_type_name(TestTypeMatcher.new()))          # print TestTypeMatcher
+##    print(Type.as_type_name(TestParentCSharp))               # print TestParentCSharp
+##    print(Type.as_type_name(0))                              # print int
+##    print(Type.as_type_name(0.0))                            # print float
+##    print(Type.as_type_name([]))                             # print Array
+##    print(Type.as_type_name(Array()), " (constructor)")      # print Array (constructor)
+##    var typed_array_engine_class : Array[Vector2]
+##    print(Type.as_type_name(typed_array_engine_class))       # print Array[Vector2]
+##    var typed_array_custom_class : Array[TestTypeMatcher]
+##    print(Type.as_type_name(typed_array_custom_class))       # print Array[TestTypeMatcher]
+##    print(Type.as_type_name({}))                             # print Dictionary
+##    print(Type.as_type_name(Dictionary()), " (constructor)") # print Dictionary (constructor)
+##    
+##    # Only on 4.4 and above which supports typed dictionary
+##    var typed_dictionary : Dictionary[Vector2, Node]
+##    print(Type.as_type_name(typed_dictionary))               # print Dictionary[Vector2, Node]
+## [/codeblock]
+## Example with built-in type:
+## [codeblock]
+##class_name TestTypeMatcher extends TestParent
+##
+##func _ready() -> void:
+##    print(Type.as_type_name(null))                           # print Nil
+##    print(Type.as_type_name(false))                          # print bool
+##    print(Type.as_type_name(bool()), " (constructor)")       # print bool (constructor)
+##    print(Type.as_type_name(0))                              # print int
+##    print(Type.as_type_name(int()), " (constructor)")        # print int (constructor)
+##    print(Type.as_type_name(0.0))                            # print float
+##    print(Type.as_type_name(float()), " (constructor)")      # print float (constructor)
+##    print(Type.as_type_name(""))                             # print String
+##    print(Type.as_type_name(String()), " (constructor)")     # print String (constructor)
+##    print(Type.as_type_name(&""))                            # print StringName
+##    print(Type.as_type_name(StringName()), " (constructor)") # print StringName (constructor)
+##    print(Type.as_type_name(^""))                            # print NodePath
+##    print(Type.as_type_name(NodePath()), " (constructor)")   # print NodePath (constructor)
+##    print(Type.as_type_name(Vector2.ZERO))                   # print Vector2
+##    print(Type.as_type_name(Vector2i.ZERO))                  # print Vector2i
+##    print(Type.as_type_name(Rect2()))                        # print Rect2
+##    print(Type.as_type_name(Rect2i()))                       # print Rect2i
+##    print(Type.as_type_name(Vector3.ZERO))                   # print Vector3
+##    print(Type.as_type_name(Vector3i.ZERO))                  # print Vector3i
+##    print(Type.as_type_name(Vector4.ZERO))                   # print Vector4
+##    print(Type.as_type_name(Vector4i.ZERO))                  # print Vector4i
+##    print(Type.as_type_name(Transform2D.IDENTITY))           # print Transform2D
+##    print(Type.as_type_name(Plane()))                        # print Plane
+##    print(Type.as_type_name(Quaternion.IDENTITY))            # print Quaternion
+##    print(Type.as_type_name(AABB()))                         # print AABB
+##    print(Type.as_type_name(Basis.IDENTITY))                 # print Basis
+##    print(Type.as_type_name(Transform3D.IDENTITY))           # print Transform3D
+##    print(Type.as_type_name(Projection.ZERO))                # print Projection
+##    print(Type.as_type_name(Color.BLACK))                    # print Color
+##    print(Type.as_type_name(RID()))                          # print RID
+##    print(Type.as_type_name(Object))                         # print Object
+##    print(Type.as_type_name([]))                             # print Array
+##    print(Type.as_type_name(Array()), " (constructor)")      # print Array (constructor)
+##    var typed_array_engine_class : Array[Vector2]
+##    print(Type.as_type_name(typed_array_engine_class))       # print Array[Vector2]
+##    var typed_array_custom_class : Array[TestTypeMatcher]
+##    print(Type.as_type_name(typed_array_custom_class))       # print Array[TestTypeMatcher]
+##    print(Type.as_type_name(PackedByteArray()))              # print PackedByteArray
+##    print(Type.as_type_name(PackedInt32Array()))             # print PackedInt32Array
+##    print(Type.as_type_name(PackedInt64Array()))             # print PackedInt64Array
+##    print(Type.as_type_name(PackedFloat32Array()))           # print PackedFloat32Array
+##    print(Type.as_type_name(PackedFloat64Array()))           # print PackedFloat64Array
+##    print(Type.as_type_name(PackedStringArray()))            # print PackedStringArray
+##    print(Type.as_type_name(PackedVector2Array()))           # print PackedVector2Array
+##    print(Type.as_type_name(PackedVector3Array()))           # print PackedVector3Array
+##    print(Type.as_type_name(PackedVector4Array()))           # print PackedVector4Array
+##    print(Type.as_type_name(PackedColorArray()))             # print PackedColorArray
+##    print(Type.as_type_name({}))                             # print Dictionary
+##    print(Type.as_type_name(Dictionary()), " (constructor)") # print Dictionary (constructor)
+##    print(Type.as_type_name(Signal()))                       # print Signal
+##    print(Type.as_type_name(Callable()))                     # print Callable
+## [/codeblock]
+static func as_type_name(type) -> StringName:
+	if typeof(type) == TYPE_OBJECT:
+		# You can change the order of the check but you need to remember
+		# A custom script is not the same as engine script
+		# But both script extends from Object and an instance also extends from Object
+		# If you don't know what this means then I don't recommend changing the order
 		
+		# Check if the passed parameter is a custom script
+		# e.g. Type.as_type_name(TestTypeMatcher)
+		if type is Script:
+			return type.get_global_name()
+		
+		# Check if the passed parameter is an engine class
+		# e.g. Type.as_type_name(Node)
+		if _gdscript_type_to_string.has(type):
+			return _gdscript_type_to_string[type]
+		
+		# Check if the passed parameter is an instance
+		if type.has_method(&"get_script"):
+			# Check if it's an instance that has custom script
+			# e.g. Type.as_type_name(TestTypeMatcher.new())
+			if type.get_script() is Script:
+				return type.get_script().get_global_name()
+	
+			# Check if it's an instance of engine class but doesn't have custom script
+			# e.g. Type.as_type_name(Node.new())
+			elif _gdscript_string_to_type.has(type.get_class()):
+				return _gdscript_type_to_string[_gdscript_string_to_type[type.get_class()]]
+	
+	return _get_built_in_type_name(type)
+
+# dont_convert is set to true when called by typed containers
+static func _get_built_in_type_name(type, dont_convert: bool = false) -> StringName:
+	match typeof(type):
+		TYPE_ARRAY:
+			if type.is_typed():
+				# Check if the key is a custom script
+				# e.g. Array[TestParent]
+				if type.get_typed_script() != null:
+					return &"Array[%s]" % type.get_typed_script().get_global_name()
+				# Check if the key is a built-in type
+				# e.g. Array[Vector2]
+				elif type.get_typed_builtin() != TYPE_OBJECT:
+					return &"Array[%s]" % _get_built_in_type_name(type.get_typed_builtin(), true)
+				else:
+					# If it's typed, and all check doesn't pass. then we can safely use the class name of engine class
+					# e.g. Array[Node]
+					return &"Array[%s]" % type.get_typed_class_name()
+			return &"Array"
+		TYPE_DICTIONARY:
+			var engine_ver : Dictionary = Engine.get_version_info()
+			# Check if the engine the user use is on version that support typed dictionary
+			if engine_ver.major >= 4 and engine_ver.minor >= 4:
+				if type.is_typed():
+					var typed_dictionary := &"Dictionary[{key}, {value}]"
+					if not type.is_typed_key():
+						typed_dictionary = typed_dictionary.format({&"key": &"Variant"})
+					# Check if the key is a custom script
+					# e.g. Dictionary[TestParent, Variant]
+					elif type.get_typed_key_script() != null:
+						typed_dictionary = typed_dictionary.format({&"key": type.get_typed_key_script().get_global_name()})
+					# Check if the key is a built-in type
+					# e.g. Dictionary[Vector2, Variant]
+					elif type.get_typed_key_builtin() != TYPE_OBJECT:
+						typed_dictionary = typed_dictionary.format({&"key": _get_built_in_type_name(type.get_typed_key_builtin(), true)})
+					else:
+						# If it's typed, and all check doesn't pass. then we can safely use the class name of engine class
+						# e.g. Dictionary[Node, Variant]
+						typed_dictionary = typed_dictionary.format({&"key": type.get_typed_key_class_name()})
+					
+					# Same check as before but on value this time
+					if not type.is_typed_value():
+						typed_dictionary = typed_dictionary.format({&"value": &"Variant"})
+					elif type.get_typed_value_script() != null:
+						typed_dictionary = typed_dictionary.format({&"value": type.get_typed_value_script().get_global_name()})
+					elif type.get_typed_value_builtin() != TYPE_OBJECT:
+						typed_dictionary = typed_dictionary.format({&"value": _get_built_in_type_name(type.get_typed_value_builtin(), true)})
+					else:
+						typed_dictionary = typed_dictionary.format({&"value": type.get_typed_value_class_name()})
+					
+					return typed_dictionary
+			return &"Dictionary"
+		_:
+			# Use the regular type_string conversion
+			# If the passed parameter told to don't convert then don't use typeof
+			# It should be set to true when called by typed containers
+			# Since the passed type is already an enum value from Variant.Type
+			return StringName(type_string(type if dont_convert else typeof(type)))
 
 ## The passed object must be of type [enum Variant.Type] TYPE_OBJECT.
 ## The parameter actual type is not specified because GDScriptNativeClass is not accessible from normal code
