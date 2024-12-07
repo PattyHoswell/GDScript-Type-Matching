@@ -173,6 +173,25 @@ func _ready() -> void:
 
 # C#
 All of the method shown here are on a static class named `GDScriptType`
+## Usage demonstration `AsTypeName`:
+#### `string AsTypeName(Variant obj)`
+Get the type name of the passed `obj`
+
+This is intended for getting a type name of GDScript obj that you can't normally access from C# which are based off from [Built-in Types Documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#built-in-types)
+```c#
+switch (GDScriptType.AsTypeName(this))
+{
+    case "TestTypeMatcher":
+        // do something
+        break;
+    case "TestParent":
+        // do something
+        break;
+    case "PackedStringArray":
+        // do something
+        break;
+}
+```
 ## Usage demonstration `ExtendingFrom`:
 #### `Array<GodotObject> ExtendingFrom(GodotObject obj)`
 Get all of the script `obj` extending from. return an `Array` wrapper of type `GodotObject`
